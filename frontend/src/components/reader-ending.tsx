@@ -131,7 +131,7 @@ export function ReaderEnding({ story, liked, onLike, bookmarked, onBookmark, onS
           colors={[withAlpha(colors.brand, 0), withAlpha(colors.brand, 0.5), withAlpha(colors.brand, 0)]}
           start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.rememberRule}
         />
-        <Text style={styles.summary} testID="summary-card" numberOfLines={6}>{story.summary}</Text>
+        <Text style={styles.summary} testID="summary-card" numberOfLines={8}>{story.summary}</Text>
         <LinearGradient
           pointerEvents="none"
           colors={[withAlpha(colors.brand, 0), withAlpha(colors.brand, 0.5), withAlpha(colors.brand, 0)]}
@@ -198,14 +198,14 @@ export function ReaderEnding({ story, liked, onLike, bookmarked, onBookmark, onS
 const useStyles = makeStyles((colors) => ({
   section: {
     width: "100%", maxWidth: READER_MAX_W, alignSelf: "center",
-    paddingHorizontal: spacing.xl, paddingTop: spacing.sm, gap: spacing.sm, flexGrow: 1,
+    paddingHorizontal: spacing.xl, paddingTop: spacing.sm, gap: spacing.md, flexGrow: 1,
   },
 
   // Card "Da ricordare": grande, in vetro, contenuto centrato.
   rememberCard: {
     borderRadius: radius.lg, borderWidth: 1, overflow: "hidden",
     alignItems: "center", alignSelf: "stretch",
-    paddingVertical: spacing.md, paddingHorizontal: spacing.lg, gap: spacing.sm,
+    paddingVertical: spacing.lg, paddingHorizontal: spacing.lg, gap: spacing.sm,
     backgroundColor: withAlpha(colors.surfaceDeep, 0.46),
   },
   rememberIcon: { marginBottom: 2 },
@@ -213,7 +213,7 @@ const useStyles = makeStyles((colors) => ({
   rememberRule: { width: 120, height: 1, borderRadius: 1, marginTop: spacing.xs, marginBottom: spacing.sm },
   rememberRuleSm: { width: 72, height: 1, borderRadius: 1, marginTop: spacing.sm, marginBottom: spacing.xs },
   summary: {
-    color: colors.textWarm, fontFamily: typography.display, fontSize: 20.5, lineHeight: 27, letterSpacing: -0.2, textAlign: "center",
+    color: colors.textWarm, fontFamily: typography.display, fontSize: 22, lineHeight: 30, letterSpacing: -0.2, textAlign: "center",
     textShadowColor: withAlpha(colors.surface, 0.6), textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 8,
   },
   completedRow: { flexDirection: "row", alignItems: "center", gap: 8 },
