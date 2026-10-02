@@ -120,7 +120,7 @@ const it = {
   // story / deep dive
   back: "Indietro", chapters: "capitoli", catch_curiosity: "ACCHIAPPA CURIOSITÀ",
   deep_dive: "Approfondisci", i_like: "Mi piace", share: "Condividi",
-  chapter: "CAPITOLO", remember: "DA RICORDARE", next_story: "Prosegui con un'altra notizia", next_discovery: "Prossima scoperta",
+  chapter: "CAPITOLO", remember: "DA RICORDARE", story_completed: "Storia completata", continue_with: "Continua con", discover_cta: "Scopri", next_story: "Prosegui con un'altra notizia", next_discovery: "Prossima scoperta",
   of: "DI", deep_intro: "INTRODUZIONE", deep_start: "Vai alla lettura", deep_scroll_hint: "Scorri per iniziare",
   info_kind: "Tipo di storia", info_category: "Categoria", info_time: "Tempo di lettura",
   deep_or: "oppure", deep_listen_ai: "Ascolta, raccontata dall'AI",
@@ -444,7 +444,7 @@ const en: typeof it = {
   saved_free_quota: (n: number, max: number) => `${n}/${max} free`,
   back: "Back", chapters: "chapters", catch_curiosity: "CURIOSITY TEASER",
   deep_dive: "Dive deeper", i_like: "Like", share: "Share",
-  chapter: "CHAPTER", remember: "REMEMBER THIS", next_story: "Continue with another story", next_discovery: "Next discovery",
+  chapter: "CHAPTER", remember: "REMEMBER THIS", story_completed: "Story completed", continue_with: "Continue with", discover_cta: "Discover", next_story: "Continue with another story", next_discovery: "Next discovery",
   of: "OF", deep_intro: "INTRODUCTION", deep_start: "Start reading", deep_scroll_hint: "Scroll to begin",
   info_kind: "Story type", info_category: "Category", info_time: "Reading time",
   deep_or: "or", deep_listen_ai: "Listen, narrated by AI",

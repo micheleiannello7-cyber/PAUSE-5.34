@@ -145,6 +145,8 @@ export default function DeepDive() {
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const scrollY = useSharedValue(0);
   const headerSolid = useSharedValue(0);
+  // Avvicinandosi alla fine: la barra di lettura sale e sfuma, compare il logo.
+  const headerEnd = useSharedValue(0);
   // Il titolo grande dell'apertura si attenua mentre scorre sotto la barra.
   const headerReveal = useSharedValue(0);
   const currentSV = useSharedValue(-1);
@@ -356,6 +358,12 @@ export default function DeepDive() {
       const maxY = e.contentSize.height - e.layoutMeasurement.height;
       if (maxY > 0 && y >= maxY - 2 && tops.length >= sectionCount - 1) idx = sectionCount - 1;
       idx = Math.max(0, Math.min(sectionCount - 1, idx));
+      // Transizione barra → schermata finale: stessa finestra della comparsa
+      // del contenuto finale, così barra e card si scambiano senza stacchi.
+      const et = endTopSV.value;
+      headerEnd.value = et > 0
+        ? interpolate(y, [et - pageHSV.value * 0.5, et - pageHSV.value * 0.12], [0, 1], Extrapolation.CLAMP)
+        : 0;
       if (idx !== currentSV.value) {
         currentSV.value = idx;
         runOnJS(setSection)(idx);
@@ -533,6 +541,7 @@ export default function DeepDive() {
           total={chapterCount}
           solid={headerSolid}
           onBack={onBackPress}
+          endReveal={headerEnd}
           corner={isPremium && listenStarted && !audioOpen ? <AudioMiniBadge visible onPress={() => setAudioOpen(true)} /> : null}
         />
 

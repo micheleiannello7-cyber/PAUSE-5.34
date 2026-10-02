@@ -12,6 +12,7 @@ import Animated, { SharedValue, useAnimatedStyle, useDerivedValue, withTiming } 
 
 import { makeStyles, useTheme, spacing, typography, withAlpha } from "@/src/theme";
 import { HighlightedTitle } from "@/src/components/highlighted-title";
+import { PauseWordmark } from "@/src/components/pause-logo";
 
 export const READER_HEADER_H = 60;
 
@@ -27,14 +28,17 @@ type Props = {
   onBack: () => void;
   /** Azione a destra già esistente (es. riapri il player): al posto del progresso. */
   corner?: ReactNode;
+  /** 0..1: avvicinandosi alla schermata finale la barra (titolo + progresso)
+      sale e sfuma, e compare il logo PAUSE centrato. */
+  endReveal?: SharedValue<number>;
 };
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
-export function ReaderHeader({ topInset, title, highlight, current, total, solid, onBack, corner }: Props) {
+export function ReaderHeader({ topInset, title, highlight, current, total, solid, onBack, corner, endReveal }: Props) {
   const styles = useStyles();
   const { colors } = useTheme();
-  const bg = useAnimatedStyle(() => ({ opacity: solid.value }));
+  const bg = useAnimatedStyle(() => ({ opacity: solid.value * (1 - (endReveal?.value ?? 0)) }));
   const n = title.length;
   const titleSize = n > 70 ? styles.titleXs : n > 55 ? styles.titleSm : n > 40 ? styles.titleMd : null;
   const inChapters = current > 0;
@@ -42,7 +46,17 @@ export function ReaderHeader({ topInset, title, highlight, current, total, solid
   const label = inChapters ? `${pad(shown)} / ${pad(total)}` : "";
   // Il titolo compatto compare solo dal primo capitolo: sull'apertura la barra resta pulita.
   const titleIn = useDerivedValue(() => withTiming(inChapters ? 1 : 0, { duration: 280 }), [inChapters]);
-  const titleFade = useAnimatedStyle(() => ({ opacity: titleIn.value, transform: [{ translateY: (1 - titleIn.value) * 6 }] }));
+  const titleFade = useAnimatedStyle(() => {
+    const end = endReveal?.value ?? 0;
+    return { opacity: titleIn.value * (1 - end), transform: [{ translateY: (1 - titleIn.value) * 6 - end * 14 }] };
+  });
+  // Alla fine: il logo PAUSE sale al suo posto con una dissolvenza morbida.
+  const wordmarkFade = useAnimatedStyle(() => {
+    const end = endReveal?.value ?? 0;
+    return { opacity: end, transform: [{ translateY: (1 - end) * 10 }] };
+  });
+  const rightFade = useAnimatedStyle(() => ({ opacity: 1 - (endReveal?.value ?? 0) }));
+  const trackFade = useAnimatedStyle(() => ({ opacity: inChapters ? (1 - (endReveal?.value ?? 0)) : 0 }));
 
   return (
     <View style={[styles.wrap, { paddingTop: topInset }]} testID="reader-header">
@@ -58,16 +72,20 @@ export function ReaderHeader({ topInset, title, highlight, current, total, solid
         <Animated.View style={[styles.copy, titleFade]} pointerEvents="none">
           <HighlightedTitle title={title} highlight={highlight} style={[styles.title, titleSize]} numberOfLines={2} testID="reader-header-title" />
         </Animated.View>
-        <View style={styles.right}>
+        {/* Logo PAUSE centrato: visibile solo sulla schermata finale. */}
+        <Animated.View style={[styles.wordmark, wordmarkFade]} pointerEvents="none" testID="reader-header-logo">
+          <PauseWordmark size={17} />
+        </Animated.View>
+        <Animated.View style={[styles.right, rightFade]}>
           {corner ? corner : (
             <Text style={[styles.label, !inChapters && styles.labelHidden]} numberOfLines={1} testID="deep-dive-page-label">
               {inChapters ? <><Text style={{ color: colors.textWarm }}>{pad(shown)}</Text>{" / "}{pad(total)}</> : label}
             </Text>
           )}
-        </View>
+        </Animated.View>
       </View>
       {/* Linea di progresso a segmenti (uno per capitolo): sottile, nel colore del tema. */}
-      <View style={[styles.track, !inChapters && styles.trackHidden]} accessibilityRole="progressbar" pointerEvents="none" testID="reader-progress">
+      <Animated.View style={[styles.track, trackFade]} accessibilityRole="progressbar" pointerEvents="none" testID="reader-progress">
         {Array.from({ length: Math.max(total, 1) }, (_, i) => (
           <View
             key={i}
@@ -75,7 +93,7 @@ export function ReaderHeader({ topInset, title, highlight, current, total, solid
             testID={i < shown ? `reader-progress-fill-${i + 1}` : undefined}
           />
         ))}
-      </View>
+      </Animated.View>
     </View>
   );
 }
@@ -89,6 +107,7 @@ const useStyles = makeStyles((colors) => ({
   },
   back: { width: 44, height: 44, alignItems: "center", justifyContent: "center", borderRadius: 22 },
   copy: { flex: 1, minWidth: 0, alignItems: "center", justifyContent: "center" },
+  wordmark: { position: "absolute", left: 0, right: 0, top: 0, bottom: 0, alignItems: "center", justifyContent: "center" },
   title: {
     color: colors.textWarm, fontFamily: typography.bodyMedium, fontSize: 14, lineHeight: 17, textAlign: "center",
     textShadowColor: withAlpha(colors.surface, 0.75), textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 8,

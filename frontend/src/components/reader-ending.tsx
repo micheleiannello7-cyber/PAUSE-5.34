@@ -1,25 +1,32 @@
-// PAUSE — fine della storia (variante "Prossima scoperta"): conclusione "Da
-// ricordare" editoriale direttamente sullo sfondo cinematico, i tre dati della
-// storia, Mi piace / Salva / Condividi (oggetti 3D, con stato acceso/spento) in
-// un'unica barra e, in fondo, la card della prossima scoperta con copertina,
-// titolo e freccia. Il contenuto compare con una dissolvenza morbida quando si
-// arriva in fondo, e il Salva mostra una conferma ampia "Aggiunto ai salvati".
+// PAUSE — schermata finale della lettura (ridisegnata sul mockup):
+// una grande card "Da ricordare" in vetro, centrata, con icona, titolo,
+// la frase da ricordare in grande e l'indicatore "Storia completata".
+// Sotto la card: Mi piace / Salva / Condividi (minimal, senza seconda card).
+// Infine "Continua con" + la card della storia consigliata (copertina a
+// sinistra, le tre icone del badge senza testo, titolo e freccia) e il
+// pulsante "Scopri". Tutti i colori seguono il tema scelto dall'utente
+// (colors.brand): il blu del mockup è solo un esempio.
+import { Fragment } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
+import { Image } from "expo-image";
 import Ionicons from "@react-native-vector-icons/ionicons";
+import MaterialDesignIcons from "@react-native-vector-icons/material-design-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, { Extrapolation, interpolate, useAnimatedStyle, SharedValue } from "react-native-reanimated";
 import * as Haptics from "@/src/haptics";
 import { play as playSound } from "@/src/sounds";
 
-import { Story, StoryPreview } from "@/src/api";
+import { Story, StoryPreview, isLesson } from "@/src/api";
 import { makeStyles, useTheme, spacing, radius, typography, withAlpha } from "@/src/theme";
 import { useI18n } from "@/src/i18n";
-import { GlowButton, GlowOrb } from "@/src/components/glass";
 import { READER_MAX_W } from "@/src/components/reader-section";
 import { StoryHero } from "@/src/components/story-hero";
 import { HighlightedTitle } from "@/src/components/highlighted-title";
-import { StoryInfoGrid } from "@/src/components/story-info-grid";
 import { ActionIcon3D } from "@/src/components/action-icon-3d";
+import { KindIcon } from "@/src/components/kind-icon";
+import { CategoryArtMark } from "@/src/components/category-artwork";
+
+const CLOCK = require("../../assets/images/kind-clock.png");
 
 type Props = {
   story: Story;
@@ -29,9 +36,9 @@ type Props = {
   onBookmark: () => void;
   onShare: () => void;
   onNext: () => void;
-  /** Torna alla Home (tasto a sinistra della storia consigliata). */
+  /** Torna alla Home (resta disponibile via tasto indietro in alto). */
   onHome: () => void;
-  /** Prossima storia già precaricata: alimenta la card "Prossima scoperta". */
+  /** Prossima storia già precaricata: alimenta la card "Continua con". */
   next?: StoryPreview | null;
   bottomInset: number;
   /** Notifica un salvataggio/rimozione: il deep-dive mostra un banner ampio. */
@@ -43,17 +50,32 @@ type Props = {
   endTop?: SharedValue<number>;
 };
 
-// Occhiello con la codina luminosa che sfuma verso destra (come nel mockup).
-function EyebrowLine({ label, color, large = false, testID }: { label: string; color: string; /** Titolo di sezione più grande (Prossima scoperta). */ large?: boolean; testID?: string }) {
+// Le tre icone del badge della storia (Tipo · Categoria · Durata), stesso
+// ordine e gerarchia delle card dell'app, ma senza testo e separate da sottili
+// linee verticali. Riusa le icone già presenti (KindIcon, CategoryArtMark, orologio).
+function BadgeIcons({ story, testID }: { story: StoryPreview; testID?: string }) {
   const styles = useStyles();
+  const { colors } = useTheme();
+  const lesson = isLesson(story);
+  const items = [
+    <KindIcon key="kind" kind={lesson ? "lessons" : "stories"} size={26} glow={false} testID={`${testID}-kind`} />,
+    <CategoryArtMark key="category" categoryId={story.category_id} color={story.category_color} size={20} aspect={1.3} plain tight testID={`${testID}-category`} />,
+    <Image key="time" source={CLOCK} style={styles.badgeClock} contentFit="contain" transition={0} testID={`${testID}-time`} />,
+  ];
   return (
-    <View style={styles.eyebrowRow} testID={testID}>
-      <Text style={[styles.eyebrow, large && styles.eyebrowLarge, { color }]}>{label}</Text>
-      <LinearGradient
-        colors={[withAlpha(color, 0.55), withAlpha(color, 0)]}
-        start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-        style={styles.eyebrowFade}
-      />
+    <View style={styles.badgeRow} testID={testID}>
+      {items.map((icon, i) => (
+        <Fragment key={i}>
+          {i > 0 && (
+            <LinearGradient
+              pointerEvents="none"
+              colors={[withAlpha(colors.brand, 0), withAlpha(colors.brand, 0.4), withAlpha(colors.brand, 0)]}
+              style={styles.badgeDivider}
+            />
+          )}
+          <View style={styles.badgeIconWrap}>{icon}</View>
+        </Fragment>
+      ))}
     </View>
   );
 }
@@ -83,8 +105,7 @@ export function ReaderEnding({ story, liked, onLike, bookmarked, onBookmark, onS
   };
 
   // Dissolvenza morbida: il contenuto sale e compare appena prima di arrivare
-  // in fondo (stessa logica dello sfondo finale). Se i valori non ci sono
-  // (caso improbabile), resta pienamente visibile.
+  // in fondo (stessa logica dello sfondo finale).
   const reveal = useAnimatedStyle(() => {
     if (!scrollY || !pageH || !endTop) return { opacity: 1 };
     const end = endTop.value;
@@ -97,81 +118,79 @@ export function ReaderEnding({ story, liked, onLike, bookmarked, onBookmark, onS
 
   return (
     <Animated.View style={[styles.section, reveal, { paddingBottom: bottomInset + spacing.md }]} testID="deep-dive-ending">
-      {/* Da ricordare — sommario editoriale direttamente sullo sfondo. */}
-      {/* Contenitore in vetro: il riassunto ha più rilievo e si stacca dal resto. */}
-      <View style={[styles.rememberCard, { borderColor: withAlpha(colors.cyan, 0.32), boxShadow: `inset 0px 0px 26px ${withAlpha(colors.cyan, 0.07)}, 0px 10px 28px ${colors.glassShadow}` as any }]} testID="remember-card">
-        <LinearGradient pointerEvents="none" colors={[withAlpha(colors.cyan, 0.1), withAlpha(colors.surfaceDeep, 0.55)]} style={StyleSheet.absoluteFill} />
-        <View style={[styles.rememberAccent, { backgroundColor: colors.cyan, boxShadow: `0px 0px 10px ${colors.cyanGlow}` as any }]} />
-        <EyebrowLine label={t.remember} color={colors.cyan} />
-        <Text style={styles.summary} testID="summary-card" numberOfLines={7}>{story.summary}</Text>
-        {/* Mi piace / Salva / Condividi: piede della stessa card, separato dal
-            riassunto da un filo di luce — un solo blocco, meno parti a schermo. */}
-        <LinearGradient pointerEvents="none" colors={[withAlpha(colors.cyan, 0.3), withAlpha(colors.cyan, 0.08), withAlpha(colors.cyan, 0)]}
-          start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.actionRule} />
-        <View style={styles.actionBar} testID="deep-dive-actions">
-          <ActionIcon3D kind="heart" active={liked} glowColor={colors.error} onPress={handleLike} testID="like-button" accessibilityLabel={t.i_like} />
-          <LinearGradient
-            pointerEvents="none"
-            colors={[withAlpha(colors.intro, 0), withAlpha(colors.intro, 0.24), withAlpha(colors.intro, 0)]}
-            style={styles.actionDivider}
-          />
-          <ActionIcon3D kind="bookmark" active={bookmarked} glowColor={colors.cyan} onPress={handleBookmark} testID="bookmark-button" accessibilityLabel={t.save_verb} />
-          <LinearGradient
-            pointerEvents="none"
-            colors={[withAlpha(colors.intro, 0), withAlpha(colors.intro, 0.24), withAlpha(colors.intro, 0)]}
-            style={styles.actionDivider}
-          />
-          <ActionIcon3D kind="share" glowColor={colors.brand} onPress={handleShare} testID="share-story" accessibilityLabel={t.share} />
+      {/* Da ricordare — grande card in vetro, contenuto centrato. */}
+      <View
+        style={[styles.rememberCard, { borderColor: withAlpha(colors.brand, 0.34), boxShadow: `inset 0px 0px 30px ${withAlpha(colors.brand, 0.08)}, 0px 12px 34px ${colors.glassShadow}` as any }]}
+        testID="remember-card"
+      >
+        <LinearGradient pointerEvents="none" colors={[withAlpha(colors.brand, 0.12), withAlpha(colors.surfaceDeep, 0.5)]} style={StyleSheet.absoluteFill} />
+        <MaterialDesignIcons name="brain" size={30} color={colors.brand} style={styles.rememberIcon} />
+        <Text style={[styles.rememberEyebrow, { color: colors.brand }]}>{t.remember}</Text>
+        <LinearGradient
+          pointerEvents="none"
+          colors={[withAlpha(colors.brand, 0), withAlpha(colors.brand, 0.5), withAlpha(colors.brand, 0)]}
+          start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.rememberRule}
+        />
+        <Text style={styles.summary} testID="summary-card" numberOfLines={8}>{story.summary}</Text>
+        <LinearGradient
+          pointerEvents="none"
+          colors={[withAlpha(colors.brand, 0), withAlpha(colors.brand, 0.5), withAlpha(colors.brand, 0)]}
+          start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.rememberRuleSm}
+        />
+        <View style={styles.completedRow} testID="story-completed">
+          <Ionicons name="checkmark-circle" size={19} color={colors.brand} />
+          <Text style={[styles.completedText, { color: colors.brand }]}>{t.story_completed}</Text>
         </View>
       </View>
 
-      {/* Prossima scoperta: card con la copertina della prossima storia. */}
+      {/* Mi piace / Salva / Condividi — riga minimale, senza una seconda card. */}
+      <View style={styles.actionBar} testID="deep-dive-actions">
+        <ActionIcon3D kind="heart" active={liked} glowColor={colors.error} onPress={handleLike} testID="like-button" accessibilityLabel={t.i_like} />
+        <LinearGradient pointerEvents="none" colors={[withAlpha(colors.intro, 0), withAlpha(colors.intro, 0.24), withAlpha(colors.intro, 0)]} style={styles.actionDivider} />
+        <ActionIcon3D kind="bookmark" active={bookmarked} glowColor={colors.brand} onPress={handleBookmark} testID="bookmark-button" accessibilityLabel={t.save_verb} />
+        <LinearGradient pointerEvents="none" colors={[withAlpha(colors.intro, 0), withAlpha(colors.intro, 0.24), withAlpha(colors.intro, 0)]} style={styles.actionDivider} />
+        <ActionIcon3D kind="share" glowColor={colors.brand} onPress={handleShare} testID="share-story" accessibilityLabel={t.share} />
+      </View>
+
+      {/* Continua con — card della storia consigliata: copertina a sinistra,
+          le tre icone del badge (senza testo), titolo e freccia a destra. */}
       {next ? (
         <View style={styles.nextWrap} testID="next-discovery">
-          {/* Separatore netto tra "Da ricordare" e la prossima scoperta. */}
-          <LinearGradient pointerEvents="none" colors={[withAlpha(colors.cyan, 0), withAlpha(colors.cyan, 0.45), withAlpha(colors.cyan, 0)]}
-            start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.divider} />
-          <EyebrowLine label={t.next_discovery} color={colors.cyan} large testID="next-discovery-title" />
+          <Text style={styles.continueLabel} testID="next-discovery-title">{t.continue_with}</Text>
           <Pressable
             onPress={onNext}
             testID="next-story"
             accessibilityRole="button"
-            accessibilityLabel={`${t.next_discovery}: ${next.title}`}
-            style={({ pressed }) => [styles.nextCard, { borderColor: withAlpha(colors.cyan, 0.4) }, pressed && styles.nextCardPressed]}
+            accessibilityLabel={`${t.continue_with}: ${next.title}`}
+            style={({ pressed }) => [styles.nextCard, { borderColor: withAlpha(colors.brand, 0.4) }, pressed && styles.pressed]}
           >
-            <StoryHero story={next} style={StyleSheet.absoluteFill} size="hero" />
-            <LinearGradient
-              colors={["transparent", withAlpha(colors.surface, 0.9)]}
-              locations={[0.3, 1]}
-              style={StyleSheet.absoluteFill}
-            />
-            <HighlightedTitle title={next.title} highlight={next.highlight_words} style={styles.nextTitle} numberOfLines={3} />
+            <View style={styles.nextThumb}>
+              <StoryHero story={next} style={StyleSheet.absoluteFill} size="thumb" iconSize={30} transition={0} />
+            </View>
+            <View style={styles.nextBody}>
+              <BadgeIcons story={next} testID="next-badge-icons" />
+              <HighlightedTitle title={next.title} highlight={next.highlight_words} style={styles.nextTitle} numberOfLines={2} />
+            </View>
+            <Ionicons name="arrow-forward" size={22} color={colors.textWarm} style={styles.nextArrow} />
           </Pressable>
-          {/* Stessi tre dati 3D (tipo · categoria · durata) del resto dell'app. */}
-          <StoryInfoGrid story={next} minutes={next.reading_time_min} inline testID="next-info-grid" />
-          {/* Due scelte: a sinistra torna alla Home, a destra leggi la storia consigliata. */}
-          <View style={styles.nextCtas}>
-            <Pressable onPress={onHome} testID="ending-home-btn" accessibilityRole="button" accessibilityLabel={t.back_home}
-              style={({ pressed }) => [styles.ctaGhost, pressed && styles.ctaPressed]}>
-              <Ionicons name="home-outline" size={18} color={colors.textWarm} />
-              <Text style={styles.ctaGhostText} numberOfLines={1}>{t.back_home}</Text>
-            </Pressable>
-            <Pressable onPress={onNext} testID="ending-read-btn" accessibilityRole="button" accessibilityLabel={t.read_story}
-              style={({ pressed }) => [styles.ctaPrimary, { backgroundColor: colors.cyan }, pressed && styles.ctaPressed]}>
-              <Text style={[styles.ctaPrimaryText, { color: colors.onGradient }]} numberOfLines={1}>{t.read_story}</Text>
-              <Ionicons name="arrow-forward" size={18} color={colors.onGradient} />
-            </Pressable>
-          </View>
         </View>
-      ) : (
-        // Fallback finché la prossima storia non è precaricata: tasto testuale.
-        <GlowButton onPress={onNext} height={62} style={styles.nextBtn} contentStyle={styles.nextBtnInner} testID="next-story" accessibilityLabel={t.next_story}>
-          <Text style={styles.nextLabel} numberOfLines={2}>{t.next_story}</Text>
-          <GlowOrb size={34}>
-            <Ionicons name="arrow-forward" size={18} color={colors.onGradient} />
-          </GlowOrb>
-        </GlowButton>
-      )}
+      ) : null}
+
+      {/* Scopri — pulsante a pillola con bordo luminoso nel colore del tema. */}
+      <Pressable
+        onPress={onNext}
+        testID="ending-read-btn"
+        accessibilityRole="button"
+        accessibilityLabel={t.discover_cta}
+        style={({ pressed }) => [
+          styles.discoverBtn,
+          { borderColor: withAlpha(colors.brand, 0.75), backgroundColor: withAlpha(colors.surfaceDeep, 0.5), boxShadow: `0px 8px 26px ${withAlpha(colors.brand, 0.28)}` as any },
+          pressed && styles.pressed,
+        ]}
+      >
+        <Text style={styles.discoverText}>{t.discover_cta}</Text>
+        <Ionicons name="arrow-forward" size={18} color={colors.textWarm} />
+      </Pressable>
     </Animated.View>
   );
 }
@@ -179,71 +198,58 @@ export function ReaderEnding({ story, liked, onLike, bookmarked, onBookmark, onS
 const useStyles = makeStyles((colors) => ({
   section: {
     width: "100%", maxWidth: READER_MAX_W, alignSelf: "center",
-    paddingHorizontal: spacing.xl, paddingTop: spacing.sm, gap: spacing.sm, flexGrow: 1,
+    paddingHorizontal: spacing.xl, paddingTop: spacing.sm, gap: spacing.md, flexGrow: 1,
   },
-  eyebrowRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-  eyebrow: { fontFamily: typography.bodyBold, fontSize: 11, letterSpacing: 2, textTransform: "uppercase" },
-  eyebrowLarge: { fontSize: 17, letterSpacing: 2.2 },
-  divider: { height: 1, alignSelf: "stretch", marginBottom: spacing.md },
-  eyebrowFade: { flex: 1, height: 1, borderRadius: 1 },
-  summary: {
-    color: colors.textWarm, fontFamily: typography.display, fontSize: 17.5, lineHeight: 25, letterSpacing: -0.1,
-    textShadowColor: withAlpha(colors.surface, 0.6), textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 8,
-  },
+
+  // Card "Da ricordare": grande, in vetro, contenuto centrato.
   rememberCard: {
     borderRadius: radius.lg, borderWidth: 1, overflow: "hidden",
-    paddingVertical: spacing.md, paddingLeft: spacing.lg, paddingRight: spacing.md, gap: spacing.sm,
-    backgroundColor: withAlpha(colors.surfaceDeep, 0.5),
+    alignItems: "center", alignSelf: "stretch",
+    paddingVertical: spacing.lg, paddingHorizontal: spacing.lg, gap: spacing.sm,
+    backgroundColor: withAlpha(colors.surfaceDeep, 0.46),
   },
-  rememberAccent: { position: "absolute", left: 0, top: spacing.md, bottom: spacing.md, width: 3, borderTopRightRadius: 2, borderBottomRightRadius: 2 },
-
-  pills: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, marginTop: 2 },
-  pill: {
-    flexDirection: "row", alignItems: "center", gap: 6, height: 30, paddingHorizontal: 12,
-    borderRadius: radius.pill, backgroundColor: colors.glassBgLit, borderWidth: 1, borderColor: colors.glassBorder,
+  rememberIcon: { marginBottom: 2 },
+  rememberEyebrow: { fontFamily: typography.bodyBold, fontSize: 12.5, letterSpacing: 2.6, textTransform: "uppercase" },
+  rememberRule: { width: 120, height: 1, borderRadius: 1, marginTop: spacing.xs, marginBottom: spacing.sm },
+  rememberRuleSm: { width: 72, height: 1, borderRadius: 1, marginTop: spacing.sm, marginBottom: spacing.xs },
+  summary: {
+    color: colors.textWarm, fontFamily: typography.display, fontSize: 22, lineHeight: 30, letterSpacing: -0.2, textAlign: "center",
+    textShadowColor: withAlpha(colors.surface, 0.6), textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 8,
   },
-  dot: { width: 6, height: 6, borderRadius: 3 },
-  pillText: { color: colors.onSurfaceSecondary, fontFamily: typography.bodyBold, fontSize: 12, letterSpacing: 0.2 },
+  completedRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  completedText: { fontFamily: typography.bodyBold, fontSize: 13.5, letterSpacing: 0.3 },
 
-  // Mi piace / Salva / Condividi: piede della card "Da ricordare", sotto un
-  // filo di luce — nessuna seconda pillola, un solo blocco.
-  actionRule: { height: 1, alignSelf: "stretch", marginTop: spacing.xs, marginRight: -spacing.md, marginLeft: -spacing.lg },
-  actionBar: {
-    flexDirection: "row", alignItems: "center", alignSelf: "stretch",
-    minHeight: 50, marginLeft: -spacing.lg + spacing.sm, marginRight: -spacing.md + spacing.sm, marginBottom: -spacing.xs,
-  },
-  actionDivider: { width: 1, height: 28 },
+  // Mi piace / Salva / Condividi: riga centrata, nessun fondo.
+  actionBar: { flexDirection: "row", alignItems: "center", justifyContent: "center", alignSelf: "center", gap: spacing.lg, minHeight: 50 },
+  actionDivider: { width: 1, height: 26 },
 
-  // La prossima scoperta prende tutto lo spazio rimasto: copertina alta e
-  // tasti Home / Leggi in fondo alla schermata.
-  nextWrap: { marginTop: spacing.lg, gap: spacing.sm, flexGrow: 1 },
+  // Continua con + card consigliata orizzontale.
+  nextWrap: { marginTop: spacing.xs, gap: spacing.sm, flexGrow: 1 },
+  continueLabel: { color: colors.textWarm, fontFamily: typography.displayBold, fontSize: 18, letterSpacing: 0.2 },
   nextCard: {
-    flexGrow: 1, minHeight: 190, borderRadius: radius.lg, overflow: "hidden", borderWidth: 1, justifyContent: "flex-end",
-    backgroundColor: colors.surfaceTertiary,
-    boxShadow: `0px 14px 34px ${colors.glassShadow}` as any,
+    flexDirection: "row", alignItems: "center", gap: spacing.md,
+    borderRadius: radius.lg, borderWidth: 1, overflow: "hidden",
+    padding: spacing.sm + 2,
+    backgroundColor: withAlpha(colors.surfaceDeep, 0.5),
+    boxShadow: `0px 10px 28px ${colors.glassShadow}` as any,
   },
-  nextCardPressed: { opacity: 0.92 },
-  nextTitle: {
-    color: colors.onGradient, fontFamily: typography.displayBold, fontSize: 20, lineHeight: 25,
-    marginHorizontal: 16, marginBottom: 14,
-  },
+  nextThumb: { width: 76, height: 76, borderRadius: radius.md, overflow: "hidden", backgroundColor: colors.surfaceTertiary },
+  nextBody: { flex: 1, minWidth: 0, gap: 7, justifyContent: "center" },
+  nextTitle: { color: colors.textWarm, fontFamily: typography.displayBold, fontSize: 18, lineHeight: 22 },
+  nextArrow: { marginHorizontal: 4 },
+  pressed: { opacity: 0.9 },
 
-  nextBtn: { marginTop: spacing.xl, marginBottom: spacing.md },
-  nextBtnInner: { justifyContent: "space-between", paddingHorizontal: spacing.lg + 4 },
-  nextLabel: { flexShrink: 1, color: colors.textWarm, fontFamily: typography.bodyBold, fontSize: 16.5, letterSpacing: 0.1 },
+  // Riga delle tre icone del badge (senza testo), con sottili linee verticali.
+  badgeRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  badgeIconWrap: { width: 26, height: 26, alignItems: "center", justifyContent: "center" },
+  badgeDivider: { width: 1, height: 16 },
+  badgeClock: { width: 22, height: 22 },
 
-  nextCtas: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.sm },
-  ctaGhost: {
-    flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8,
-    height: 48, paddingHorizontal: spacing.md, borderRadius: radius.pill, borderWidth: 1,
-    borderColor: colors.glassBorderStrong, backgroundColor: colors.glassBgLit,
+  // Scopri — pillola con bordo luminoso.
+  discoverBtn: {
+    flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10,
+    alignSelf: "center", minWidth: 220, height: 54, paddingHorizontal: spacing.xl,
+    borderRadius: radius.pill, borderWidth: 1, marginTop: spacing.sm,
   },
-  ctaGhostText: { color: colors.textWarm, fontFamily: typography.bodyBold, fontSize: 14, letterSpacing: 0.2 },
-  ctaPrimary: {
-    flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8,
-    height: 48, borderRadius: radius.pill,
-    boxShadow: `0px 10px 24px ${colors.cyanGlow}` as any,
-  },
-  ctaPrimaryText: { fontFamily: typography.bodyBold, fontSize: 15, letterSpacing: 0.3 },
-  ctaPressed: { opacity: 0.9 },
+  discoverText: { color: colors.textWarm, fontFamily: typography.bodyBold, fontSize: 15.5, letterSpacing: 0.4 },
 }));

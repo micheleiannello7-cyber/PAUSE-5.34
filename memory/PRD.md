@@ -11,6 +11,11 @@ PAUSE è un'app mobile (Expo/React Native + FastAPI + MongoDB) di micro-apprendi
 - **Backend**: FastAPI (`/api/*`), MongoDB con seed idempotente all'avvio. Contenuti caricati da `seed_data.py`, `seed_pack_*`, `seed_lessons_*`, `v8_content.json`, `v9_content.json`.
 - **Object Storage**: Emergent Managed Object Storage per copertine/illustrazioni (usa `EMERGENT_LLM_KEY`).
 
+## Schermata finale lettura — ridisegno su mockup (2026-10-02)
+- `reader-ending.tsx` ridisegnato: card "Da ricordare" in vetro centrata (icona `brain` MDI, occhiello, frase grande centrata, "Storia completata" con check), poi riga minimale Mi piace/Salva/Condividi (nessuna seconda card), sezione "Continua con" (nuova stringa i18n, più grande) con card consigliata orizzontale (copertina a sinistra, le TRE icone del badge Tipo·Categoria·Durata senza testo separate da linee verticali, titolo, freccia) e pulsante "Scopri" a pillola con bordo luminoso. Tutti gli accenti usano `colors.brand` → seguono il tema scelto (il blu del mockup è solo esempio).
+- Transizione lettura→fine: `reader-header.tsx` riceve `endReveal` (da `deep-dive/[id].tsx`, stessa finestra della comparsa del contenuto finale): la barra (titolo + progresso + vetro) sale e sfuma, compare il logo PΛUSE centrato. Nuove stringhe i18n: `story_completed`, `continue_with`, `discover_cta` (IT/EN).
+- Nessuna modifica a backend/DB/TTS/salvataggi/condivisione/sistema badge/altre schermate; riusati componenti e icone esistenti. Verificato in preview end-to-end fino alla schermata finale.
+
 ## Current State (re-extraction — 2026-10-02, repo PAUSE-5.33) [Fase 1]
 - App ri-estratta dal repo `PAUSE-5.33` in questo container; backend + frontend Expo web rimessi in piedi.
 - `backend/.env`: MONGO_URL/DB_NAME preservati, `EMERGENT_LLM_KEY` impostato, `TTS_ENABLED="false"`. Seed automatico all'avvio: **12 categorie, 493 storie**. `/api/health` = ok (db: true).
