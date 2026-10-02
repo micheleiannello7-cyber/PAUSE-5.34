@@ -11,6 +11,14 @@ PAUSE è un'app mobile (Expo/React Native + FastAPI + MongoDB) di micro-apprendi
 - **Backend**: FastAPI (`/api/*`), MongoDB con seed idempotente all'avvio. Contenuti caricati da `seed_data.py`, `seed_pack_*`, `seed_lessons_*`, `v8_content.json`, `v9_content.json`.
 - **Object Storage**: Emergent Managed Object Storage per copertine/illustrazioni (usa `EMERGENT_LLM_KEY`).
 
+## Current State (re-extraction — 2026-10-02, repo PAUSE-5.33) [Fase 1]
+- App ri-estratta dal repo `PAUSE-5.33` in questo container; backend + frontend Expo web rimessi in piedi.
+- `backend/.env`: MONGO_URL/DB_NAME preservati, `EMERGENT_LLM_KEY` impostato, `TTS_ENABLED="false"`. Seed automatico all'avvio: **12 categorie, 493 storie**. `/api/health` = ok (db: true).
+- `frontend/.env`: `EXPO_PUBLIC_BACKEND_URL` allineato all'URL ingress del pod. Supervisor `frontend` avvia `expo start --web --port 3000` (script "start" aggiornato in package.json). Dipendenze reinstallate (pip + yarn, cache react-native ripulita).
+- **Completata rinomina "Mini lezioni" → "Impara"**: ultima stringa `read_lesson` aggiornata in `src/i18n.tsx` → "Leggi e Impara" (IT) / "Read & Learn" (EN). Nessun residuo "mini-lezione"/"mini lesson".
+- Verifica E2E (testing agent, iteration_1): onboarding (ospite) → scelta 12 categorie con illustrazioni → home → apertura e lettura capitolo per schermate → salvataggi → profilo con statistiche. Frontend 100%, nessun errore.
+- Audio/TTS e Stripe/premium restano DISATTIVATI per scelta (preview sola lettura). Fase 2: audio + compattazione capitoli (richiede ricarica credito).
+
 ## Current State (re-extraction — 2026-10-01, repo PAUSE-5.32)
 - App ri-estratta dal repo `PAUSE-5.32` in questo container e preview rimessa online.
 - `frontend/.env` allineato all'URL ingress corretto del pod corrente (EXPO_PUBLIC_BACKEND_URL / proxy / hostname).
