@@ -1,0 +1,25 @@
+{
+  "summary": "Frontend-only regression after i18n duplicate 'read_story' key removal and ReaderEnding onHome prop cleanup. All four acceptance criteria verified on web preview (mobile 430x900, English).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "verification_results": {
+    "home_renders_and_card_opens_reader": "PASS - Home (/discover) rendered with story cards; tapping a non-lesson card opened the reader (no blank screen / crash).",
+    "i18n_aria_label_check": "PASS - Found 2 non-lesson story-card open overlays; both aria-labels start with 'Read the story:' (e.g. 'Read the story: Su Venere un giorno dura più di un anno', 'Read the story: Perché il pop-corn scoppia'). No generic 'Read:' label observed. Confirms duplicate i18n 'read_story' key is gone.",
+    "final_screen_regression": "PASS - At /deep-dive/sky-blue-sunset-orange?start=1 reached final screen. reader-header-logo present, reader-back present, ending-read-btn visible, next-story visible. Clicking next-story navigated to /deep-dive/v9-the-red-sky-in-munch-s-scream-was-real-a-volcano-behind-... Clicking ending-read-btn (Discover) also navigated away to a different story URL. Both controls work after onHome prop removal.",
+    "console_errors": "PASS - 0 red console/page errors captured during the full flow (home -> open story -> deep-dive -> end -> next, and -> discover)."
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (not tested per request)", "frontend": "100%"},
+  "test_credentials": "None - guest flow used",
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Guest flow on web preview: load base URL, wait ~8s for Metro bundle, click 'Continue as guest', pick 1+ categories (e.g. Science/Space/Nature), click 'Start discovering' to reach /discover. Story card open overlays are selectable via data-testid matching ^home-story-.*-open$ with aria-label attribute. Deep-dive final screen reliably reached in ~1-2 wheel scrolls on /deep-dive/sky-blue-sunset-orange?start=1 (viewport 430x900)."
+}
