@@ -1,7 +1,7 @@
 // PAUSE — Stats & badges. Top numbers are for everyone; the curiosity map,
 // activity history, badge collection and monthly recap card are Premium.
 // Data comes from GET /api/user/{id}/stats (see backend/stats.py).
-import { useRef, useState } from "react";
+import { useRef, useState, ElementRef } from "react";
 import {
   View, Text, ScrollView, Pressable, ActivityIndicator, StyleSheet, Platform,
 } from "react-native";
@@ -47,7 +47,7 @@ export default function StatsScreen() {
     enabled: !!userId,
   });
 
-  const monthShareRef = useRef<View>(null);
+  const monthShareRef = useRef<ElementRef<typeof ViewShot>>(null);
   const [wrappedStyle, setWrappedStyle] = useState<WrappedStyle>("aurora");
 
   const onShare = async () => {
@@ -305,7 +305,7 @@ function MonthRecap({
   return (
     <View style={styles.recap} testID={`stats-month-recap-${variant}`}>
       <LinearGradient
-        colors={gradient}
+        colors={gradient as readonly [string, string, ...string[]]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={StyleSheet.absoluteFill}

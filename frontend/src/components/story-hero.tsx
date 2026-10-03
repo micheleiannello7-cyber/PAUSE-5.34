@@ -2,7 +2,7 @@
 // deep-dive, thumbnails). Uses the photo when the story has one, otherwise a
 // branded gradient tinted with the category colour and its icon.
 import { useId, useState } from "react";
-import { View, StyleSheet, StyleProp, ViewStyle } from "react-native";
+import { View, StyleSheet, StyleProp, ViewStyle, ImageStyle } from "react-native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import Ionicons from "@react-native-vector-icons/ionicons";
@@ -31,7 +31,7 @@ export function StoryHero({
     return (
       <Image
         testID={`${testID}-image`} accessibilityLabel={story.title}
-        source={{ uri }} style={style} contentFit="cover" transition={transition}
+        source={{ uri }} style={style as StyleProp<ImageStyle>} contentFit="cover" transition={transition}
         cachePolicy="memory-disk" recyclingKey={uri}
         onError={() => setFailedUris((current) => current.includes(uri) ? current : [...current, uri])}
       />

@@ -2,7 +2,7 @@
 // sistema di responder di React Native (funziona anche sul web del preview).
 // Si appoggia alla misura in finestra della traccia per calcolare la frazione.
 import React, { useCallback, useRef, useState } from "react";
-import { View, PanResponder, LayoutChangeEvent } from "react-native";
+import { View, PanResponder, LayoutChangeEvent, DimensionValue } from "react-native";
 import { makeStyles } from "@/src/theme";
 
 export function VolumeSlider({
@@ -66,7 +66,7 @@ export function VolumeSlider({
     }),
   ).current;
 
-  const pct = `${Math.round(fill * 100)}%`;
+  const pct: DimensionValue = `${Math.round(fill * 100)}%`;
 
   return (
     <View
