@@ -119,6 +119,5 @@ const useStyles = makeStyles((colors) => ({
   label: { color: colors.textWarmSecondary, fontFamily: typography.bodyMedium, fontSize: 14, letterSpacing: 0.8, fontVariant: ["tabular-nums"] },
   labelHidden: { opacity: 0 },
   track: { flexDirection: "row", gap: 4, height: 2, marginHorizontal: spacing.md },
-  trackHidden: { opacity: 0 },
   segment: { flex: 1, height: 2, borderRadius: 1 },
 }));

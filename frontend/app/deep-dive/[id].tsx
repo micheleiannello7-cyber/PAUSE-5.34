@@ -530,7 +530,7 @@ export default function DeepDive() {
       <ReaderAtmosphere scrollY={scrollY} fadeOver={pageH * 0.9} />
       {/* Grande copertina dell'apertura: sale appena e resta una traccia scura con lo scroll. */}
       <ReaderCoverBackdrop story={story} scrollY={scrollY} frame={cover} bandTop={headerBottom} instant={morph === "1"} />
-      {/* Schermata finale: sfondo cinematico dell'onboarding, compare solo in fondo. */}
+      {/* Schermata finale: sfondo acquatico notturno, compare solo in fondo. */}
       {chaptersReady ? <ReaderEndingBackdrop scrollY={scrollY} pageH={pageHSV} endTop={endTopSV} /> : null}
       <StoryAudioProvider key={story.id} storyId={story.id} autoplay={listen === "1" && isPremium}>
         <ReaderHeader
@@ -583,7 +583,6 @@ export default function DeepDive() {
               onBookmark={() => toggle("bookmark")}
               onShare={onShare}
               onNext={onNext}
-              onHome={onBackPress}
               bottomInset={insets.bottom}
               onSaved={(saved) => setSavedTrigger((p) => ({ saved, n: (p?.n ?? 0) + 1 }))}
               scrollY={scrollY}

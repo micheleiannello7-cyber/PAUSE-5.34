@@ -36,8 +36,6 @@ type Props = {
   onBookmark: () => void;
   onShare: () => void;
   onNext: () => void;
-  /** Torna alla Home (resta disponibile via tasto indietro in alto). */
-  onHome: () => void;
   /** Prossima storia già precaricata: alimenta la card "Continua con". */
   next?: StoryPreview | null;
   bottomInset: number;
@@ -80,7 +78,7 @@ function BadgeIcons({ story, testID }: { story: StoryPreview; testID?: string })
   );
 }
 
-export function ReaderEnding({ story, liked, onLike, bookmarked, onBookmark, onShare, onNext, onHome, next, bottomInset, onSaved, scrollY, pageH, endTop }: Props) {
+export function ReaderEnding({ story, liked, onLike, bookmarked, onBookmark, onShare, onNext, next, bottomInset, onSaved, scrollY, pageH, endTop }: Props) {
   const styles = useStyles();
   const { colors } = useTheme();
   const { t } = useI18n();
