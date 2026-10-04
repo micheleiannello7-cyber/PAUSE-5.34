@@ -2,7 +2,7 @@
 // Mini lezione. `lit` controlla lo stato acceso/spento: quando passa a true
 // la lampadina "si accende" (breve sfarfallio, alone caldo, piccolo rimbalzo);
 // i libri si illuminano di ciano e fanno un piccolo balzo.
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { View, StyleSheet, StyleProp, ViewStyle } from "react-native";
 import { Image } from "expo-image";
 import Animated, {
@@ -39,8 +39,19 @@ export function KindIcon({
   const bright = useSharedValue(lit ? 1 : 0);
   const scale = useSharedValue(1);
   const lift = useSharedValue(0);
+  // Niente animazione di "accensione" al primo render (es. quando si apre una
+  // storia): l'icona appare già nel suo stato. L'animazione resta solo quando
+  // `lit` cambia dopo il montaggio (es. selezione nell'onboarding).
+  const firstRun = useRef(true);
 
   useEffect(() => {
+    if (firstRun.current) {
+      firstRun.current = false;
+      bright.value = lit ? 1 : 0;
+      scale.value = 1;
+      lift.value = 0;
+      return;
+    }
     if (lit) {
       if (kind === "stories") {
         // Accensione: due sfarfallii veloci, poi luce piena.
